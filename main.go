@@ -7,14 +7,19 @@ import (
 	"mychat-message/middleware"
 	"mychat-message/utils"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("⚠️ .env not found, using system environment")
+	// โหลดค่าจาก .env
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load()
+
+		if err != nil {
+			log.Fatal("ไม่พบไฟล์ .env หรือโหลดไม่สำเร็จ")
+		}
 	}
 
 	database.InitMongo()
