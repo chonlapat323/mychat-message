@@ -1,0 +1,34 @@
+package main
+
+import (
+	"log"
+	"mychat-message/database"
+	"mychat-message/handlers"
+	"mychat-message/middleware"
+	"mychat-message/utils"
+	"net/http"
+
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("⚠️ .env not found, using system environment")
+	}
+
+	database.InitMongo()
+	utils.InitRedis()
+	// /messages?room_id=xxx
+	http.Handle("/messages", middleware.CORSMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.JWTAuthMiddleware(http.HandlerFunc(handlers.GetMessagesHandler)).ServeHTTP(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})))
+
+	log.Println("Message service running on :5002")
+	log.Fatal(http.ListenAndServe(":5002", nil))
+}
